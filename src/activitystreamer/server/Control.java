@@ -41,8 +41,7 @@ public class Control extends Thread {
     protected static Control control = null;
 
 
-    //Justin: global all client variables
-    //Justin: accounts (i.e. login details stored on the server)
+    
     //ArrayList<String[]> accounts = new ArrayList<String[]>();
     HashMap<String, String> accounts = new HashMap<>();
 
@@ -51,27 +50,26 @@ public class Control extends Thread {
     HashMap<Connection, Long> loginTimeByConnection = new HashMap<>();
     HashMap<Connection, String> connectionToUsername = new HashMap<>();
 
-    //Peng: list for remote servers
+
     ArrayList<Connection> conToServers = new ArrayList<>();
-    //Justin: hashmap of pending usernames, key = username, value = hashmap of server ip's and their responses.
+    //hashmap of pending usernames, key = username, value = hashmap of server ip's and their responses.
     HashMap<String, HashMap<Connection, Boolean>> pendingAccountUsernameResponses = new HashMap<>();
-    //Justin: hashmap of pending usernames, key = username, value = the connection to the client that requested the registration.
+    //hashmap of pending usernames, key = username, value = the connection to the client that requested the registration.
     HashMap<String, Connection> pendingAccountUsernameClientCons = new HashMap<>();
 
     HashMap<String, Connection> pendingAccountUsernameServerCons = new HashMap<>();
 
-    //Justin: hashmap of pending login responses, key = username, value = hashmap of server ip's and their responses.
+    //hashmap of pending login responses, key = username, value = hashmap of server ip's and their responses.
     HashMap<String, HashMap<Connection, Boolean>> pendingLoginResponses = new HashMap<>();
 
-    //Justin: hashmap of pending login, key = username, value = the connection to the client that requested the registration.
+    //hashmap of pending login, key = username, value = the connection to the client that requested the registration.
     HashMap<String, Connection> pendingLoginClientCons = new HashMap<>();
 
     HashMap<String, Connection> pendingLoginServerCons = new HashMap<>();
 
-    //Peng: look up table from server host name to its load
+    //look up table from server host name to its load
     HashMap<String, Integer> serverLoads = new HashMap<>();
 
-    //Justin: not sure if this will be used in the final version, but I assume this is the hashmap of connected server IP's
     HashMap<String, Integer> serverToPort = new HashMap<>();
     //Deabpool stores the info of the server this server recconects to if its parent dies (the parent of that parent/ first server in its con list)
     //Pool of servers to connect to upon death of its parent (secret, remote hostname, remote port)
@@ -98,11 +96,8 @@ public class Control extends Thread {
             System.exit(-1);
         }
 
-        //Justin: test guest account
         //String[] guestAccount = {"guest","password"};
-        //Peng: modified for Map
         accounts.put("guest", "password");
-        //Peng: anonymous is logged in once server starts.
         loginTime.put("anonymous", remoteStartTime);
 
         // assign server ID:
@@ -111,7 +106,7 @@ public class Control extends Thread {
         start();
     }
 
-    //Peng: modified to add a single server to conToServer list
+    //modified to add a single server to conToServer list
     public void initiateConnection(){
         // make a connection to another server if remote hostname is supplied
         if(Settings.getRemoteHostname()!=null){
@@ -171,39 +166,33 @@ public class Control extends Thread {
     }
 
 
-
-
-    //Justin's methods
-
-
-
     /*
      * Processing incoming messages from the connection.
      * Return true if the connection should close.
      */
     public synchronized boolean process(Connection con,String msg){
 
-        //Justin: Sender's IP address
+        //Sender's IP address
         String msgIP = Settings.socketAddress(con.getSocket()).split(":")[0];
         //Justin: Sender's Port
         int msgPort = Integer.parseInt(Settings.socketAddress(con.getSocket()).split(":")[1]);
 
 
-        //Justin: there are certain situations in which you may want the server to process something, but not respond
+        //there are certain situations in which you may want the server to process something, but not respond
         //if that's the case, set skipResponse equal to true
         boolean skipResponse = false;
 
 
-        //Justin: set up json object from msg
+        //set up json object from msg
         JSONParser parser;
         parser = new JSONParser();
-        //Peng: added a boolean flag which is used in Connection.java, indicating whether it should be terminated.
+        //added a boolean flag which is used in Connection.java, indicating whether it should be terminated.
         boolean connectionTerm = true;
         // Peng: added a json object to hold return message
         JSONObject returnJSON = new JSONObject();
         JSONObject receivedJSON = null;
 
-        //Justin: quick fix for strange sent string behaviour
+        //quick fix for strange sent string behaviour
         msg = msg.trim();
         if(msg.charAt(0) != '{') {
             msg = msg.substring(1);
@@ -295,8 +284,8 @@ public class Control extends Thread {
     /** auxillary methods for process **/
     // login deals with login under case LOGIN in process
     private boolean login(JSONObject receivedJson, Connection con) {
-        // Peng: using HashMap and JSONObject
-        // Peng: also process redirection operation here.
+        // Using HashMap and JSONObject
+        // Also process redirection operation here.
         String idleServer = findIdleServer();
         JSONObject returnJSON = new JSONObject();
         boolean connectionTerm = true;
@@ -388,7 +377,7 @@ public class Control extends Thread {
             connectionTerm = true;
         }
         else {
-            //Justin: this server has received a login_allowed message from another server
+            //This server has received a login_allowed message from another server
             //meaning it now has to store that the ip of said other server has allowed the username in question
             HashMap<Connection, Boolean> respondedCons = pendingLoginResponses.get(username);
             if (respondedCons != null) {
@@ -428,7 +417,7 @@ public class Control extends Thread {
                             pendingLoginClientCons.get(username).writeMsg(waitingClientJSON.toJSONString());
                         }
                         break;
-                    default://Justin: continue waiting
+                    default //continue waiting
                         break;
                 }
             }
@@ -459,14 +448,14 @@ public class Control extends Thread {
             connectionTerm = true;
         }
         else{
-            //Justin: this server has received a login_denied message from another server
+            //this server has received a login_denied message from another server
             //meaning it now has to store that the ip of said other server has denied the username in question
             HashMap<Connection, Boolean> respondedCons = pendingLoginResponses.get(username);
             if(respondedCons != null) {
                 respondedCons.put(con, false);
                 pendingLoginResponses.put(username, respondedCons);
 
-                //Justin: now check all server responses up until this point
+                //now check all server responses up until this point
                 JSONObject waitingClientJSON = new JSONObject();
                 switch(loginAllowed(username)){
                     case ("denied"):
@@ -499,7 +488,7 @@ public class Control extends Thread {
                             pendingLoginClientCons.get(username).writeMsg(waitingClientJSON.toJSONString());
                         }
                         break;
-                    default://Justin: continue waiting
+                    default://continue waiting
                         break;
                 }
             }
@@ -536,15 +525,15 @@ public class Control extends Thread {
 
             //Justin: server IS NOT a terminal server
             if(getServerCount() > 1 && !userIsValid(username, secret)) {
-                //Justin: must now send out a login_request to all servers except the original sender
-                //Justin: avoid waiting for parent server approval fail-safe, by adding the parent server to the list of approved servers
+                //must now send out a login_request to all servers except the original sender
+                //avoid waiting for parent server approval fail-safe, by adding the parent server to the list of approved servers
                 HashMap<Connection, Boolean> respondedCons = new HashMap<>();
                 respondedCons.put(con, true);
                 pendingLoginResponses.put(username, respondedCons);
                 pendingLoginServerCons.put(username, con);
                 log.debug("broadcasting LOGIN_REQUEST");
 
-                //Justin: if no issues are encountered up until this point, the server will wait until it receives responses from other servers
+                //if no issues are encountered up until this point, the server will wait until it receives responses from other servers
 
                 lockJSON.put("command", "LOGIN_REQUEST");
                 lockJSON.put("username", username);
@@ -552,7 +541,7 @@ public class Control extends Thread {
                 broadcastToServers(lockJSON, con);
                 log.debug("4");
             }
-            //Justin: server IS a terminal server and only has to check itself
+            // server IS a terminal server and only has to check itself
             else {
                 //it now has to check if the login details that the other server is checking for exists and broadcast its results
                 if (!userIsValid(username, secret)) {
@@ -642,7 +631,6 @@ public class Control extends Thread {
     }
 
     private boolean serverAnnounce(JSONObject receivedJSON, Connection con){
-        //TODO: Peng: needs server authentication.
         JSONObject returnJSON = new JSONObject();
         boolean connectionTerm = true;
 
@@ -650,7 +638,7 @@ public class Control extends Thread {
         String hostname = (String) receivedJSON.get("hostname");
         int port = Integer.parseInt((String)receivedJSON.get("port"));
         String secret = (String) receivedJSON.get("id");
-        //Peng: update server load and port
+        //update server load and port
         log.debug("IN SERVER_ANNOUNCE: ");
         log.debug("load: " + load);
         log.debug("port: " + port);
@@ -788,7 +776,7 @@ public class Control extends Thread {
             connectionTerm = true;
         }
         else {
-            //Justin: checks if the username exists within this server, or any others
+            // checks if the username exists within this server, or any others
             if(usernameExists(username)) {
                 returnJSON.put("command", "REGISTER_FAILED");
                 returnJSON.put("info", username + " is already registered with the system");
@@ -802,7 +790,7 @@ public class Control extends Thread {
 
                     connectionTerm = false;
                 }
-                //Justin: this server is connected to other servers and needs to clarify with all of them
+                //this server is connected to other servers and needs to clarify with all of them
                 else{
                     pendingAccountUsernameResponses.put(username, new HashMap<>());
                     pendingAccountUsernameClientCons.put(username, con);
@@ -844,14 +832,14 @@ public class Control extends Thread {
             connectionTerm = true;
         }
         else {
-            //Justin: this server has received a lock_allowed message from another server
+            //this server has received a lock_allowed message from another server
             //meaning it now has to store that the ip of said other server has allowed the username in question
             HashMap<Connection, Boolean> respondedCons = pendingAccountUsernameResponses.get(username);
             if (respondedCons != null) {
                 respondedCons.put(con, true);
                 pendingAccountUsernameResponses.put(username, respondedCons);
 
-                //Justin: now check all server responses up until this point
+                // now check all server responses up until this point
                 JSONObject waitingClientJSON = new JSONObject();
                 switch(lockAllowed(username)){
                     case ("denied"):
@@ -884,7 +872,7 @@ public class Control extends Thread {
                             pendingAccountUsernameClientCons.get(username).writeMsg(waitingClientJSON.toJSONString());
                         }
                         break;
-                    default://Justin: continue waiting
+                    default://continue waiting
                         break;
                 }
             }
@@ -915,7 +903,7 @@ public class Control extends Thread {
             connectionTerm = true;
         }
         else{
-            //Justin: this server has received a lock_denied message from another server
+            //this server has received a lock_denied message from another server
             //meaning it now has to store that the ip of said other server has denied the username in question
             HashMap<Connection, Boolean> respondedCons = pendingAccountUsernameResponses.get(username);
             if(respondedCons != null) {
@@ -986,21 +974,21 @@ public class Control extends Thread {
             connectionTerm = true;
         }
         else{
-            //Justin: this server has received a lock_request message from another server
+            //this server has received a lock_request message from another server
 
             JSONObject lockJSON = new JSONObject();
 
             //Justin: server IS NOT a terminal server
             if(getServerCount() > 1 && usernameExists(username) == false) {
-                //Justin: must now send out a lock_request to all servers except the original sender
-                //Justin: avoid waiting for parent server approval fail-safe, by adding the parent server to the list of approved servers
+                // must now send out a lock_request to all servers except the original sender
+                // avoid waiting for parent server approval fail-safe, by adding the parent server to the list of approved servers
                 HashMap<Connection, Boolean> respondedCons = new HashMap<>();
                 respondedCons.put(con, true);
                 pendingAccountUsernameResponses.put(username, respondedCons);
                 pendingAccountUsernameServerCons.put(username, con);
                 log.debug("broadcasting LOCK_REQUEST");
 
-                //Justin: if no issues are encountered up until this point, the server will wait until it receives responses from other servers
+                //if no issues are encountered up until this point, the server will wait until it receives responses from other servers
 
                 lockJSON.put("command", "LOCK_REQUEST");
                 lockJSON.put("username", username);
@@ -1008,7 +996,7 @@ public class Control extends Thread {
                 broadcastToServers(lockJSON, con);
                 log.debug("4");
             }
-            //Justin: server IS a terminal server and only has to check itself
+            //server IS a terminal server and only has to check itself
             else {
                 //it now has to check if the username that the other server is checking for exists and broadcast its results
                 if (usernameExists(username)) {
@@ -1247,7 +1235,6 @@ public class Control extends Thread {
         }
     }
 
-    //Justin's additional methods
     public boolean usernameExists(String username){
         if(accounts.get(username) == null){
             return false;
@@ -1261,7 +1248,7 @@ public class Control extends Thread {
 
         int allowedResponses = 0;
 
-        //Justin: Get the haspmap being stored a the key of the pending username
+        // Get the haspmap being stored a the key of the pending username
         //Go through all of its contents and return denied if any server has denied this request
         //return allowed if all of the servers have allowed this request
         //return pending if all the servers have yet to respond
@@ -1294,7 +1281,7 @@ public class Control extends Thread {
 
         int allowedResponses = 0;
 
-        //Justin: Get the haspmap being stored a the key of the pending username
+        //Get the haspmap being stored a the key of the pending username
         //Go through all of its contents and return denied if any server has denied this request
         //return allowed if all of the servers have allowed this request
         //return pending if all the servers have yet to respond
@@ -1462,7 +1449,6 @@ public class Control extends Thread {
         listener.setTerm(true);
     }
 
-    //Peng: method used for server Announce
     public boolean doActivity(){
         // Announce to other server
         log.debug("List of Connected Servers");
@@ -1482,7 +1468,7 @@ public class Control extends Thread {
         return false;
     }
 
-    //Peng: method used for Redirection.
+    // method used for Redirection.
     public String findIdleServer(){
         if(serverLoads.isEmpty())
             return null;
