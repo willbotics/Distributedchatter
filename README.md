@@ -1,4 +1,8 @@
-**Introduction**
+**Multi server, multi user distributed chat application in JAVA**
+School project to build from the ground up a fault tollerent distributed chat application which uses the CAP theroem to optimize user performance.
+
+
+**Introduction (from paper)**
 
 The project improved upon our first iteration of a distributed group com- munication system. The new system is designed to provide availability and eventual consistency in the presence of server failures and network partition- ing. The main protocols implemented were
 
