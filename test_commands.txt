@@ -1,0 +1,83 @@
+For starting 6 servers in chain off 3780 original
+a->b->c, b->d, d->e
+      a
+     b c
+    d
+   e f
+
+
+Server command line inputs
+a    -lp 3780  -lh localhost -ms aaa
+b    -lp 3781  -lh localhost -rh localhost -rp 3780 -s aaa -ms bbb
+c    -lp 3782  -lh localhost -rh localhost -rp 3780 -s aaa -ms ccc
+d    -lp 3783  -lh localhost -rh localhost -rp 3781 -s bbb -ms ddd
+e    -lp 3784  -lh localhost -rh localhost -rp 3783 -s ddd -ms eee
+f    -lp 3785  -lh localhost -rh localhost -rp 3783 -s ddd -ms fff
+
+
+Start clients cmnd line.
+1 -rp 3780 -rh localhost ANONYMOUS 1 to a
+2 -rp 3780 -rh localhost ANONYMOUS 2 to a
+3 -rp 3781 -rh localhost
+4 -rp 3782 -rh localhost  Register 1
+5 -rp 3784 -rh localhost  Register 2
+6 -rp 3785 -rh localhost Register 3
+
+
+
+
+S->S
+{ "command" : "AUTHENTICATE", "secret" : "fmnmpp3ai91qb3gc2bvs14g3ue"}
+{ "command" : "SERVER_ANNOUNCE", "id" : "fmnmpp3ai91qb3gc2bvs14g3ue", "load" : 5, "hostname" : "128.250.13.46", "port" : 3570 }
+{ "command" : "ACTIVITY_BROADCAST", "activity" : "{}" }
+{ "command" : "LOCK_REQUEST", "username" : "aaron", "secret" : "fmnmpp3ai91qb3gc2bvs14g3ue" }
+{ "command" : "LOCK_DENIED", "username" : "aaron", "secret" : "fmnmpp3ai91qb3gc2bvs14g3ue" }
+{ "command" : "LOCK_DENIED", "username" : "aaron", "secret" : "fmnmpp3ai91qb3gc2bvs14g3ue" }
+{ "command" : "LOCK_ALLOWED", "username" : "aaron", "secret" : "fmnmpp3ai91qb3gc2bvs14g3ue" }
+
+C->S
+{"command": "ACTIVITY_MESSAGE", "username": "anonymous", "activity": {"Message": "Hi"}}
+{"command": "ACTIVITY_MESSAGE", "username" : "aaron", "secret" : "fmnmpp3ai91qb3gc2bvs14g3ue", "activity": {"Message": "Hi"}}
+{"command": "LOGIN", "username": "guest", "secret": "password"}
+{"command": "LOGIN", "username" : "aaron", "secret" : "fmnmpp3ai91qb3gc2bvs14g3ue"}
+{ "command" : "REGISTER", "username" : "aaron", "secret" : "fmnmpp3ai91qb3gc2bvs14g3ue"}
+{ "command" : "LOGOUT" }
+
+S->C
+{ "command" : "REDIRECT", "hostname" : "123.456.78.9", "port" : 1234 }
+
+REGISTER.
+
+{
+ "command" : "REGISTER",
+ "username" : "Will",
+ "secret" : "hockey"
+}
+{
+ "command" : "REGISTER",
+ "username" : "Justin",
+ "secret" : "Japan"
+}
+LOGIN.
+
+{
+  "command" : "LOGIN",
+  "username" : "Will",
+  "secret" : "hockey"
+ }
+ {
+   "command" : "LOGIN",
+   "username" : "Justin",
+   "secret" : "Japan"
+  }
+
+ACTIVITY_MESSAGE, from registered user
+
+{
+ "command" : "ACTIVITY_MESSAGE",
+ "username" : "Will",
+ "secret" : "hockey",
+ "activity" : { "text" : "hello out there were on the air"}
+}
+
+ACTIVITY_MESSAGE, from unregistered user
